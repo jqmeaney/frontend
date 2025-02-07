@@ -1,21 +1,25 @@
-# Use Node.js for Angular build
+# Stage 1: Build the Angular app
 FROM node:18 AS build
 
 # Set working directory
 WORKDIR /app
 
-# Copy project files
+# Copy package files and install dependencies
 COPY package.json package-lock.json ./
 RUN npm install
 
+# Copy all project files and build the app
 COPY . .
-
-# Build Angular app
 RUN npm run build --prod
 
-# Use Nginx to serve the app
+# Stage 2: Serve the app using Nginx
 FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
 
+# Copy built files to Nginx's default HTML directory
+COPY --from=build /app/dist/frontend /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
